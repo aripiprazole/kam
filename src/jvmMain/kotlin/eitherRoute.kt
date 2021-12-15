@@ -26,6 +26,7 @@ import arrow.core.computations.either
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.feature
+import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.RouteSelector
@@ -61,10 +62,8 @@ open class EitherRoute(@PublishedApi internal val route: Route) {
       when (result) {
         is Either.Right -> {}
         is Either.Left -> when (val value = result.value) {
-          is Respondable -> with(value) {
-            pipelineContextOriginal.respondToPipeline()
-          }
-          else -> call.respond(value)
+          is Respondable -> with(value) { call.respondToPipeline() }
+          else -> call.respond(HttpStatusCode.InternalServerError, value)
         }
       }
     }
@@ -76,6 +75,10 @@ open class EitherRoute(@PublishedApi internal val route: Route) {
   @JvmName("handleLeftTyped")
   inline fun <reified E : Any> handle(crossinline handler: EitherPipelineInterceptor<Unit, ApplicationCall, E>) {
     val routing = route.application.feature(EitherRouting)
+
+    val defaultResponder: EitherResponder<E> = { value ->
+      respond(HttpStatusCode.InternalServerError, value)
+    }
 
     route.handle {
       val pipelineContextOriginal = this
@@ -91,12 +94,10 @@ open class EitherRoute(@PublishedApi internal val route: Route) {
       when (result) {
         is Either.Right -> {}
         is Either.Left -> when (val value = result.value) {
-          is Respondable -> with(value) {
-            pipelineContextOriginal.respondToPipeline()
-          }
+          is Respondable -> with(value) { call.respondToPipeline() }
           else -> routing.responders
-            .getOrDefault(value::class) { run { call.respond(it) } }
-            .invoke(pipelineContextOriginal, value)
+            .getOrDefault(value::class, defaultResponder)
+            .invoke(call, value)
         }
       }
     }

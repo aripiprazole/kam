@@ -17,10 +17,9 @@
 package co.knoten.kam
 
 import io.ktor.application.ApplicationCall
-import io.ktor.util.pipeline.PipelineContext
 
 fun interface Respondable {
-  suspend fun PipelineContext<Unit, ApplicationCall>.respondToPipeline()
+  suspend fun ApplicationCall.respondToPipeline()
 }
 
-typealias EitherResponder<T> = suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit
+typealias EitherResponder<T> = suspend ApplicationCall.(T) -> Unit
