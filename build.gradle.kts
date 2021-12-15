@@ -20,6 +20,7 @@ plugins {
   kotlin("multiplatform") version "1.6.0"
   id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
   id("io.gitlab.arturbosch.detekt") version "1.19.0"
+  `maven-publish`
 }
 
 group = "co.knoten"
