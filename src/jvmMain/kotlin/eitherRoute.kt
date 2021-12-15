@@ -75,13 +75,13 @@ open class EitherRoute(val route: Route) {
    */
   @JvmName("handleLeftTyped")
   inline fun <reified E : Any> handle(crossinline handler: EitherPipelineInterceptor<Unit, ApplicationCall, E>) {
-    val routing = route.application.feature(EitherRouting)
-
     val defaultResponder: EitherResponder<E> = { value ->
       respond(HttpStatusCode.InternalServerError, value)
     }
 
     route.handle {
+      val routing = route.application.feature(EitherRouting)
+      
       val pipelineContextOriginal = this
 
       val result = either<E, Unit> {
