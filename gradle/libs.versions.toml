@@ -1,0 +1,11 @@
+[versions]
+ktor="1.6.6"
+arrow="1.0.1"
+
+[libraries.ktor-server-core]
+module="io.ktor:ktor-server-core"
+version.ref="ktor"
+
+[libraries.arrow-core]
+module="io.arrow-kt:arrow-core"
+version.ref="arrow"
