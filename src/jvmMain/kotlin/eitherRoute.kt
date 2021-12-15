@@ -90,12 +90,13 @@ open class EitherRoute(@PublishedApi internal val route: Route) {
       @Suppress("UNCHECKED_CAST")
       when (result) {
         is Either.Right -> {}
-        is Either.Left -> {
-          val responder = routing.responders[E::class]
-            ?: result.value as? EitherResponder<Any>
-            ?: { call.respond(result.value) }
-
-          responder(result.value)
+        is Either.Left -> when (val value = result.value) {
+          is Respondable -> with(value) {
+            pipelineContextOriginal.respondToPipeline()
+          }
+          else -> routing.responders
+            .getOrDefault(value::class) { run { call.respond(it) } }
+            .invoke(pipelineContextOriginal, value)
         }
       }
     }
