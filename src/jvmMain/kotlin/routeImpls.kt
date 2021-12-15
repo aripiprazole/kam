@@ -129,7 +129,7 @@ fun RouteE.get(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCa
  */
 @ContextDsl
 @JvmName("eitherLeftTypedGet")
-inline fun <reified E : Any> RouteE.get(
+inline fun <reified E : Any> RouteE.getE(
   path: String,
   @BuilderInference noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
 ): RouteE {
@@ -153,7 +153,7 @@ fun RouteE.get(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): Rou
  */
 @ContextDsl
 @JvmName("eitherLeftTypedGet")
-inline fun <reified E : Any> RouteE.get(
+inline fun <reified E : Any> RouteE.getE(
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
 ): RouteE {
@@ -177,7 +177,7 @@ fun RouteE.post(path: String, body: EitherPipelineInterceptor<Unit, ApplicationC
  */
 @ContextDsl
 @JvmName("eitherLeftTypedPost")
-inline fun <reified E : Any> RouteE.post(
+inline fun <reified E : Any> RouteE.postE(
   path: String,
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
@@ -202,7 +202,7 @@ fun RouteE.post(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): Ro
  */
 @ContextDsl
 @JvmName("eitherLeftTypedPost")
-inline fun <reified E : Any> RouteE.post(
+inline fun <reified E : Any> RouteE.postE(
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
 ): RouteE {
@@ -290,7 +290,7 @@ fun RouteE.head(path: String, body: EitherPipelineInterceptor<Unit, ApplicationC
  */
 @ContextDsl
 @JvmName("eitherLeftTypedHead")
-inline fun <reified E : Any> RouteE.head(
+inline fun <reified E : Any> RouteE.headE(
   path: String,
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
@@ -315,7 +315,7 @@ fun RouteE.head(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): Ro
  */
 @ContextDsl
 @JvmName("eitherLeftTypedHead")
-inline fun <reified E : Any> RouteE.head(
+inline fun <reified E : Any> RouteE.headE(
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
 ): RouteE {
@@ -339,7 +339,7 @@ fun RouteE.put(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCa
  */
 @ContextDsl
 @JvmName("eitherLeftTypedPut")
-inline fun <reified E : Any> RouteE.put(
+inline fun <reified E : Any> RouteE.putE(
   path: String,
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
@@ -364,7 +364,7 @@ fun RouteE.put(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): Rou
  */
 @ContextDsl
 @JvmName("eitherLeftTypedPut")
-inline fun <reified E : Any> RouteE.put(
+inline fun <reified E : Any> RouteE.putE(
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
 ): RouteE {
@@ -394,7 +394,7 @@ inline fun <reified R : Any> RouteE.put(
  */
 @ContextDsl
 @JvmName("eitherLeftPutTyped")
-inline fun <reified E : Any, reified R : Any> RouteE.put(
+inline fun <reified E : Any, reified R : Any> RouteE.putE(
   path: String,
   @BuilderInference
   crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit,
@@ -411,12 +411,12 @@ inline fun <reified E : Any, reified R : Any> RouteE.put(
  */
 @ContextDsl
 @JvmName("eitherPutTyped")
-inline fun <reified E : Any, reified R : Any> RouteE.put(
+inline fun <reified R : Any> RouteE.put(
   @BuilderInference
-  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit
+  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, Any, *>.(R) -> Unit,
 ): RouteE {
   return method(HttpMethod.Put) {
-    handle<E> {
+    handle {
       body(call.receive())
     }
   }
@@ -453,7 +453,7 @@ fun RouteE.patch(path: String, body: EitherPipelineInterceptor<Unit, Application
  */
 @ContextDsl
 @JvmName("eitherLeftTypedPatch")
-inline fun <reified E : Any> RouteE.patch(
+inline fun <reified E : Any> RouteE.patchE(
   path: String,
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
@@ -478,7 +478,7 @@ fun RouteE.patch(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): R
  */
 @ContextDsl
 @JvmName("eitherLeftTypedPatch")
-inline fun <reified E : Any> RouteE.patch(
+inline fun <reified E : Any> RouteE.patchE(
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
 ): RouteE {
@@ -566,7 +566,7 @@ fun RouteE.delete(path: String, body: EitherPipelineInterceptor<Unit, Applicatio
  */
 @ContextDsl
 @JvmName("eitherDeleteLeftTyped")
-inline fun <reified E : Any> RouteE.delete(
+inline fun <reified E : Any> RouteE.deleteE(
   path: String,
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
@@ -591,7 +591,7 @@ fun RouteE.delete(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): 
  */
 @ContextDsl
 @JvmName("eitherDeleteLeftTyped")
-inline fun <reified E : Any> RouteE.delete(
+inline fun <reified E : Any> RouteE.deleteE(
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
 ): RouteE {
@@ -618,7 +618,7 @@ fun RouteE.options(
  */
 @ContextDsl
 @JvmName("eitherOptionsLeftTyped")
-inline fun <reified E : Any> RouteE.options(
+inline fun <reified E : Any> RouteE.optionsE(
   path: String,
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
@@ -643,7 +643,7 @@ fun RouteE.options(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>):
  */
 @ContextDsl
 @JvmName("eitherOptionsLeftTyped")
-inline fun <reified E : Any> RouteE.options(
+inline fun <reified E : Any> RouteE.optionsE(
   @BuilderInference
   noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
 ): RouteE {

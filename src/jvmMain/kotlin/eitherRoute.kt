@@ -59,7 +59,7 @@ open class EitherRoute(val route: Route) {
 
         handler(pipelineContext, Unit)
       }
-
+      
       when (result) {
         is Either.Right -> {}
         is Either.Left -> when (val value = result.value) {
