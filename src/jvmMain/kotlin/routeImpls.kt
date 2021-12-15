@@ -15,34 +15,25 @@
  */
 
 @file:Suppress("unused")
+@file:OptIn(ExperimentalTypeInference::class)
 
 package co.knoten.kam
 
-import arrow.core.Either
-import arrow.core.computations.either
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
-import io.ktor.response.respond
+import io.ktor.request.receive
 import io.ktor.routing.ConstantParameterRouteSelector
 import io.ktor.routing.HttpAcceptRouteSelector
 import io.ktor.routing.HttpHeaderRouteSelector
 import io.ktor.routing.HttpMethodRouteSelector
 import io.ktor.routing.OptionalParameterRouteSelector
 import io.ktor.routing.ParameterRouteSelector
-import io.ktor.routing.Route
 import io.ktor.routing.createRouteFromPath
-import io.ktor.routing.delete
-import io.ktor.routing.get
-import io.ktor.routing.head
-import io.ktor.routing.options
-import io.ktor.routing.patch
-import io.ktor.routing.post
-import io.ktor.routing.put
 import io.ktor.util.pipeline.ContextDsl
-import io.ktor.util.pipeline.PipelineContext
+import kotlin.experimental.ExperimentalTypeInference
 import co.knoten.kam.EitherRoute as RouteE
 
 /**
@@ -127,29 +118,98 @@ fun RouteE.contentType(contentType: ContentType, build: RouteE.() -> Unit): Rout
  * Builds a route to match `GET` requests with specified [path]
  */
 @ContextDsl
-fun RouteE.get(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.get(path, it) }
+fun RouteE.get(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return route(path, HttpMethod.Get) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `GET` requests with specified [path]
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedGet")
+inline fun <reified E : Any> RouteE.get(
+  path: String,
+  @BuilderInference noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return route(path, HttpMethod.Get) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `GET` requests
  */
 @ContextDsl
-fun RouteE.get(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.get(it) }
+fun RouteE.get(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return method(HttpMethod.Get) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `GET` requests
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedGet")
+inline fun <reified E : Any> RouteE.get(
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return method(HttpMethod.Get) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `POST` requests with specified [path]
  */
 @ContextDsl
-fun RouteE.post(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.post(path, it) }
+fun RouteE.post(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return route(path, HttpMethod.Post) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `POST` requests with specified [path]
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedPost")
+inline fun <reified E : Any> RouteE.post(
+  path: String,
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return route(path, HttpMethod.Post) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `POST` requests
  */
 @ContextDsl
-fun RouteE.post(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.post(it) }
+fun RouteE.post(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return method(HttpMethod.Post) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `POST` requests
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedPost")
+inline fun <reified E : Any> RouteE.post(
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return method(HttpMethod.Post) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `POST` requests with specified [path] receiving request body content of type [R]
@@ -158,8 +218,31 @@ fun RouteE.post(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE 
 @JvmName("eitherPostTypedPath")
 inline fun <reified R : Any> RouteE.post(
   path: String,
-  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, *>.(R) -> Unit
-): RouteE = bindRoute(body) { route.post(path, it) }
+  crossinline body: suspend AEitherPipelineContext<Unit, ApplicationCall>.(R) -> Unit,
+): RouteE {
+  return route(path, HttpMethod.Post) {
+    handle {
+      body(call.receive())
+    }
+  }
+}
+
+/**
+ * Builds a route to match `POST` requests with specified [path] receiving request body content of type [R]
+ */
+@ContextDsl
+@JvmName("eitherLeftPostTypedPath")
+inline fun <reified E : Any, reified R : Any> RouteE.postE(
+  path: String,
+  @BuilderInference
+  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit,
+): RouteE {
+  return route(path, HttpMethod.Post) {
+    handle<E> {
+      body(call.receive())
+    }
+  }
+}
 
 /**
  * Builds a route to match `POST` requests receiving request body content of type [R]
@@ -167,73 +250,242 @@ inline fun <reified R : Any> RouteE.post(
 @ContextDsl
 @JvmName("eitherPostTyped")
 inline fun <reified R : Any> RouteE.post(
-  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, *>.(R) -> Unit
+  crossinline body: suspend AEitherPipelineContext<Unit, ApplicationCall>.(R) -> Unit
 ): RouteE {
-  return bindRoute(body) { route.post(it) }
+  return method(HttpMethod.Post) {
+    handle {
+      body(call.receive())
+    }
+  }
+}
+
+/**
+ * Builds a route to match `POST` requests receiving request body content of type [R]
+ */
+@ContextDsl
+@JvmName("eitherLeftPostTyped")
+inline fun <reified E : Any, reified R : Any> RouteE.postE(
+  @BuilderInference
+  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit
+): RouteE {
+  return method(HttpMethod.Post) {
+    handle<E> {
+      body(call.receive())
+    }
+  }
 }
 
 /**
  * Builds a route to match `HEAD` requests with specified [path]
  */
 @ContextDsl
-fun RouteE.head(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.head(path, it) }
+fun RouteE.head(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return route(path, HttpMethod.Head) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `HEAD` requests with specified [path]
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedHead")
+inline fun <reified E : Any> RouteE.head(
+  path: String,
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return route(path, HttpMethod.Head) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `HEAD` requests
  */
 @ContextDsl
-fun RouteE.head(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.head(it) }
+fun RouteE.head(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return method(HttpMethod.Head) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `HEAD` requests
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedHead")
+inline fun <reified E : Any> RouteE.head(
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return method(HttpMethod.Head) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `PUT` requests with specified [path]
  */
 @ContextDsl
-fun RouteE.put(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.put(path, it) }
+fun RouteE.put(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return route(path, HttpMethod.Put) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `PUT` requests with specified [path]
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedPut")
+inline fun <reified E : Any> RouteE.put(
+  path: String,
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return route(path, HttpMethod.Put) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `PUT` requests
  */
 @ContextDsl
-fun RouteE.put(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.put(it) }
+fun RouteE.put(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return method(HttpMethod.Put) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `PUT` requests
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedPut")
+inline fun <reified E : Any> RouteE.put(
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return method(HttpMethod.Put) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `PUT` requests with specified [path] receiving request body content of type [R]
  */
 @ContextDsl
-@JvmName("eitherPutTypedPath")
+@JvmName("eitherPutTyped")
 inline fun <reified R : Any> RouteE.put(
   path: String,
-  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, *>.(R) -> Unit
-): RouteE = bindRoute(body) { route.put(path, it) }
+  crossinline body: suspend AEitherPipelineContext<Unit, ApplicationCall>.(R) -> Unit,
+): RouteE {
+  return route(path, HttpMethod.Put) {
+    handle {
+      body(call.receive())
+    }
+  }
+}
+
+/**
+ * Builds a route to match `PUT` requests with specified [path] receiving request body content of type [R]
+ */
+@ContextDsl
+@JvmName("eitherLeftPutTyped")
+inline fun <reified E : Any, reified R : Any> RouteE.put(
+  path: String,
+  @BuilderInference
+  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit,
+): RouteE {
+  return route(path, HttpMethod.Put) {
+    handle<E> {
+      body(call.receive())
+    }
+  }
+}
 
 /**
  * Builds a route to match `PUT` requests receiving request body content of type [R]
  */
 @ContextDsl
 @JvmName("eitherPutTyped")
-inline fun <reified R : Any> RouteE.put(
-  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, *>.(R) -> Unit
+inline fun <reified E : Any, reified R : Any> RouteE.put(
+  @BuilderInference
+  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit
 ): RouteE {
-  return bindRoute(body) { route.put(it) }
+  return method(HttpMethod.Put) {
+    handle<E> {
+      body(call.receive())
+    }
+  }
+}
+
+/**
+ * Builds a route to match `PUT` requests receiving request body content of type [R]
+ */
+@ContextDsl
+@JvmName("eitherLeftPutTyped")
+inline fun <reified E : Any, reified R : Any> RouteE.putE(
+  @BuilderInference
+  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit
+): RouteE {
+  return method(HttpMethod.Put) {
+    handle<E> {
+      body(call.receive())
+    }
+  }
 }
 
 /**
  * Builds a route to match `PATCH` requests with specified [path]
  */
 @ContextDsl
-fun RouteE.patch(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.patch(path, it) }
+fun RouteE.patch(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return route(path, HttpMethod.Patch) {
+    handle(body)
+  }
+}
 
 /**
- * Builds a route to match `PUT` requests
+ * Builds a route to match `PATCH` requests with specified [path]
  */
 @ContextDsl
-fun RouteE.patch(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.patch(it) }
+@JvmName("eitherLeftTypedPatch")
+inline fun <reified E : Any> RouteE.patch(
+  path: String,
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return route(path, HttpMethod.Patch) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `PATCH` requests
+ */
+@ContextDsl
+fun RouteE.patch(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return method(HttpMethod.Patch) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `PATCH` requests
+ */
+@ContextDsl
+@JvmName("eitherLeftTypedPatch")
+inline fun <reified E : Any> RouteE.patch(
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return method(HttpMethod.Patch) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `PATCH` requests with specified [path] receiving request body content of type [R]
@@ -242,8 +494,31 @@ fun RouteE.patch(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE
 @JvmName("eitherPatchTypedPath")
 inline fun <reified R : Any> RouteE.patch(
   path: String,
-  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, *>.(R) -> Unit
-): RouteE = bindRoute(body) { route.patch(path, it) }
+  crossinline body: suspend AEitherPipelineContext<Unit, ApplicationCall>.(R) -> Unit,
+): RouteE {
+  return route(path, HttpMethod.Patch) {
+    handle {
+      body(call.receive())
+    }
+  }
+}
+
+/**
+ * Builds a route to match `PATCH` requests with specified [path] receiving request body content of type [R]
+ */
+@ContextDsl
+@JvmName("eitherLeftPatchTyped")
+inline fun <reified E : Any, reified R : Any> RouteE.patchE(
+  path: String,
+  @BuilderInference
+  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit,
+): RouteE {
+  return route(path, HttpMethod.Patch) {
+    handle<E> {
+      body(call.receive())
+    }
+  }
+}
 
 /**
  * Builds a route to match `PATCH` requests receiving request body content of type [R]
@@ -251,59 +526,135 @@ inline fun <reified R : Any> RouteE.patch(
 @ContextDsl
 @JvmName("eitherPatchTyped")
 inline fun <reified R : Any> RouteE.patch(
-  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, *>.(R) -> Unit
+  crossinline body: suspend AEitherPipelineContext<Unit, ApplicationCall>.(R) -> Unit,
 ): RouteE {
-  return bindRoute(body) { route.patch(it) }
+  return method(HttpMethod.Patch) {
+    handle {
+      body(call.receive())
+    }
+  }
+}
+
+/**
+ * Builds a route to match `PATCH` requests receiving request body content of type [R]
+ */
+@ContextDsl
+@JvmName("eitherLeftPatchTyped")
+inline fun <reified E : Any, reified R : Any> RouteE.patchE(
+  @BuilderInference
+  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, E, *>.(R) -> Unit,
+): RouteE {
+  return method(HttpMethod.Patch) {
+    handle<E> {
+      body(call.receive())
+    }
+  }
 }
 
 /**
  * Builds a route to match `DELETE` requests with specified [path]
  */
 @ContextDsl
-fun RouteE.delete(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.delete(path, it) }
+fun RouteE.delete(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return route(path, HttpMethod.Delete) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `DELETE` requests with specified [path]
+ */
+@ContextDsl
+@JvmName("eitherDeleteLeftTyped")
+inline fun <reified E : Any> RouteE.delete(
+  path: String,
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return route(path, HttpMethod.Delete) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `DELETE` requests
  */
 @ContextDsl
-fun RouteE.delete(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.delete(it) }
+fun RouteE.delete(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return method(HttpMethod.Delete) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `DELETE` requests
+ */
+@ContextDsl
+@JvmName("eitherDeleteLeftTyped")
+inline fun <reified E : Any> RouteE.delete(
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return method(HttpMethod.Delete) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `OPTIONS` requests with specified [path]
  */
 @ContextDsl
-fun RouteE.options(path: String, body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.options(path, it) }
+fun RouteE.options(
+  path: String,
+  body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>,
+): RouteE {
+  return route(path, HttpMethod.Options) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `OPTIONS` requests with specified [path]
+ */
+@ContextDsl
+@JvmName("eitherOptionsLeftTyped")
+inline fun <reified E : Any> RouteE.options(
+  path: String,
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return route(path, HttpMethod.Options) {
+    handle(body)
+  }
+}
 
 /**
  * Builds a route to match `OPTIONS` requests
  */
 @ContextDsl
-fun RouteE.options(body: EitherPipelineInterceptor<Unit, ApplicationCall>): RouteE =
-  bindRoute(body) { route.options(it) }
+fun RouteE.options(body: EitherPipelineInterceptor<Unit, ApplicationCall, Any>): RouteE {
+  return method(HttpMethod.Options) {
+    handle(body)
+  }
+}
+
+/**
+ * Builds a route to match `OPTIONS` requests
+ */
+@ContextDsl
+@JvmName("eitherOptionsLeftTyped")
+inline fun <reified E : Any> RouteE.options(
+  @BuilderInference
+  noinline body: EitherPipelineInterceptor<Unit, ApplicationCall, E>,
+): RouteE {
+  return method(HttpMethod.Options) {
+    handle(body)
+  }
+}
 
 /**
  * Create a routing entry for specified path
  */
 fun RouteE.createRouteFromPath(path: String): RouteE {
   return route.createRouteFromPath(path).e()
-}
-
-@PublishedApi
-internal inline fun <R> bindRoute(
-  crossinline body: suspend EitherPipelineContext<Unit, ApplicationCall, *>.(R) -> Unit,
-  original: (suspend PipelineContext<Unit, ApplicationCall>.(R) -> Unit) -> Route,
-): RouteE {
-  return RouteE(original { parameter ->
-    val result = either<Any, Unit> {
-      body(EitherPipelineContextImpl(this@original, this@either), parameter)
-    }
-    
-    when (result) {
-      is Either.Right -> {}
-      is Either.Left -> call.respond(result.value)
-    }
-  })
 }

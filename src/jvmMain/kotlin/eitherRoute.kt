@@ -15,15 +15,23 @@
  */
 
 @file:Suppress("unused")
+@file:OptIn(ExperimentalTypeInference::class)
 
 package co.knoten.kam
 
+import arrow.core.Either
+import arrow.core.Validated
 import arrow.core.computations.EitherEffect
 import arrow.core.computations.either
 import io.ktor.application.ApplicationCall
+import io.ktor.application.call
+import io.ktor.application.feature
+import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.RouteSelector
+import io.ktor.routing.application
 import io.ktor.util.pipeline.PipelineContext
+import kotlin.experimental.ExperimentalTypeInference
 
 /**
  * Describes a node in a routing tree with [arrow.core.Either] bindings.
@@ -39,20 +47,60 @@ open class EitherRoute(@PublishedApi internal val route: Route) {
   /**
    * Installs a handler into this route which will be called when the route is selected for a call
    */
-  fun handle(handler: EitherPipelineInterceptor<Unit, ApplicationCall>) {
+  fun handle(handler: EitherPipelineInterceptor<Unit, ApplicationCall, Any>) {
     route.handle {
       val pipelineContextOriginal = this
-      
-      either<Any, Unit> {
-        val context: EitherPipelineContext<Unit, ApplicationCall, *> = EitherPipelineContextImpl(
-          pipelineContextOriginal, this
-        )
-        
-        handler(context, Unit)
+
+      val result = either<Any, Unit> {
+        val pipelineContext: EitherPipelineContext<Unit, ApplicationCall, Any, *> =
+          EitherPipelineContextImpl(pipelineContextOriginal, this)
+
+        handler(pipelineContext, Unit)
+      }
+
+      when (result) {
+        is Either.Right -> {}
+        is Either.Left -> when (val value = result.value) {
+          is Respondable -> with(value) {
+            pipelineContextOriginal.respondToPipeline()
+          }
+          else -> call.respond(value)
+        }
       }
     }
   }
-  
+
+  /**
+   * Installs a handler into this route which will be called when the route is selected for a call
+   */
+  @JvmName("handleLeftTyped")
+  inline fun <reified E : Any> handle(crossinline handler: EitherPipelineInterceptor<Unit, ApplicationCall, E>) {
+    val routing = route.application.feature(EitherRouting)
+
+    route.handle {
+      val pipelineContextOriginal = this
+
+      val result = either<E, Unit> {
+        val pipelineContext: EitherPipelineContext<Unit, ApplicationCall, E, *> =
+          EitherPipelineContextImpl(pipelineContextOriginal, this)
+
+        handler(pipelineContext, Unit)
+      }
+
+      @Suppress("UNCHECKED_CAST")
+      when (result) {
+        is Either.Right -> {}
+        is Either.Left -> {
+          val responder = routing.responders[E::class]
+            ?: result.value as? EitherResponder<Any>
+            ?: { call.respond(result.value) }
+
+          responder(result.value)
+        }
+      }
+    }
+  }
+
   fun afterIntercepted() {
     route.afterIntercepted()
   }
@@ -66,16 +114,25 @@ fun Route.e(): EitherRoute {
   return EitherRoute(this)
 }
 
-typealias EitherPipelineInterceptor<TSubject, TContext> =
-  suspend EitherPipelineContext<TSubject, TContext, *>.(TSubject) -> Unit
+typealias EitherPipelineInterceptor<TSubject, TContext, E> =
+  suspend EitherPipelineContext<TSubject, TContext, E, *>.(TSubject) -> Unit
 
-interface EitherPipelineContext<TSubject : Any, TContext : Any, V> :
-  PipelineContext<TSubject, TContext>, EitherEffect<Any, V>
+typealias AEitherPipelineContext<TSubject, TContext> =
+  EitherPipelineContext<TSubject, TContext, Any, *>
+
+interface EitherPipelineContext<TSubject : Any, TContext : Any, E, V> :
+  PipelineContext<TSubject, TContext>, EitherEffect<E, V> {
+  override suspend fun <B> Either<E, B>.bind(): B
+
+  override suspend fun <B> Validated<E, B>.bind(): B
+
+  override suspend fun <B> Result<B>.bind(transform: (Throwable) -> E): B
+}
 
 @PublishedApi
-internal class EitherPipelineContextImpl<TSubject : Any, TContext : Any, V>(
+internal class EitherPipelineContextImpl<TSubject : Any, TContext : Any, E, A>(
   pipelineContext: PipelineContext<TSubject, TContext>,
-  eitherEffect: EitherEffect<Any, V>,
-) : EitherPipelineContext<TSubject, TContext, V>,
+  eitherEffect: EitherEffect<E, A>,
+) : EitherPipelineContext<TSubject, TContext, E, A>,
   PipelineContext<TSubject, TContext> by pipelineContext,
-  EitherEffect<Any, V> by eitherEffect
+  EitherEffect<E, A> by eitherEffect

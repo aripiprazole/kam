@@ -44,6 +44,12 @@ kotlin {
   }
 
   sourceSets {
+    all {
+      languageSettings {
+        optIn("kotlin.RequiresOptIn")
+      }
+    }
+
     val jvmMain by getting {
       dependencies {
         implementation(libs.arrow.core)
