@@ -17,9 +17,10 @@
 package co.knoten.kam
 
 import io.ktor.application.ApplicationCall
+import kotlin.reflect.KType
 
-fun interface Respondable {
-  suspend fun ApplicationCall.respondToPipeline()
+interface Respondable {
+  suspend fun ApplicationCall.respondToPipeline(type: KType? = null)
 }
 
 typealias EitherResponder<T> = suspend ApplicationCall.(T) -> Unit

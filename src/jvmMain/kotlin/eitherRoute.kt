@@ -34,6 +34,7 @@ import io.ktor.routing.RouteSelector
 import io.ktor.routing.application
 import io.ktor.util.pipeline.PipelineContext
 import kotlin.experimental.ExperimentalTypeInference
+import kotlin.reflect.typeOf
 
 /**
  * Describes a node in a routing tree with [arrow.core.Either] bindings.
@@ -63,7 +64,9 @@ open class EitherRoute(val route: Route) {
       when (result) {
         is Either.Right -> {}
         is Either.Left -> when (val value = result.value) {
-          is Respondable -> with(value) { call.respondToPipeline() }
+          is Respondable -> with(value) { 
+            call.respondToPipeline(null) 
+          }
           else -> call.respond(HttpStatusCode.InternalServerError, value)
         }
       }
@@ -95,7 +98,7 @@ open class EitherRoute(val route: Route) {
       when (result) {
         is Either.Right -> {}
         is Either.Left -> when (val value = result.value) {
-          is Respondable -> with(value) { call.respondToPipeline() }
+          is Respondable -> with(value) { call.respondToPipeline(typeOf<E>()) }
           else -> routing.responders
             .getOrDefault(value::class, defaultResponder)
             .invoke(call, value)
