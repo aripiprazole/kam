@@ -23,6 +23,7 @@ import arrow.core.Either
 import arrow.core.Validated
 import arrow.core.computations.EitherEffect
 import arrow.core.computations.either
+import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.feature
@@ -39,7 +40,7 @@ import kotlin.experimental.ExperimentalTypeInference
  *
  * @param route is an instance of default [Route]
  */
-open class EitherRoute(@PublishedApi internal val route: Route) {
+open class EitherRoute(val route: Route) {
   /**
    * Allows using route instance for building additional routes
    */
@@ -111,6 +112,9 @@ open class EitherRoute(@PublishedApi internal val route: Route) {
     return route.createChild(selector).e()
   }
 }
+
+val EitherRoute.application: Application
+  get() = route.application
 
 fun Route.e(): EitherRoute {
   return EitherRoute(this)
