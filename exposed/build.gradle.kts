@@ -14,10 +14,13 @@
  *    limitations under the License.
  */
 
-rootProject.name = "kam"
-
-include("ktor-routing")
-include("ktor-auth")
-include("exposed")
-
-enableFeaturePreview("VERSION_CATALOGS")
+kotlin {
+  sourceSets {
+    val jvmMain by getting {
+      dependencies {
+        implementation(libs.exposed.core)
+        implementation(libs.exposed.dao)
+      }
+    }
+  }
+}

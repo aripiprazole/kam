@@ -14,10 +14,18 @@
  *    limitations under the License.
  */
 
-rootProject.name = "kam"
+package co.knoten.kam
 
-include("ktor-routing")
-include("ktor-auth")
-include("exposed")
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.OptionalReference
 
-enableFeaturePreview("VERSION_CATALOGS")
+class OptionalReferenceK<R : Comparable<R>, ID : Comparable<ID>, T : Entity<ID>>(
+  internal val delegate: OptionalReference<R, ID, T>,
+) {
+  val reference = delegate.reference
+  val factory = delegate.factory
+}
+
+@Suppress("MaxLineLength")
+fun <R : Comparable<R>, ID : Comparable<ID>, T : Entity<ID>> OptionalReference<R, ID, T>.k(): OptionalReferenceK<R, ID, T> =
+  OptionalReferenceK(this)

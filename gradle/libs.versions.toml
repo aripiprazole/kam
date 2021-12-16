@@ -1,6 +1,15 @@
 [versions]
 ktor="1.6.6"
 arrow="1.0.1"
+exposed="0.34.1"
+
+[libraries.exposed-core]
+module="org.jetbrains.exposed:exposed-core"
+version.ref="exposed"
+
+[libraries.exposed-dao]
+module="org.jetbrains.exposed:exposed-dao"
+version.ref="exposed"
 
 [libraries.ktor-auth-core]
 module="io.ktor:ktor-auth"
