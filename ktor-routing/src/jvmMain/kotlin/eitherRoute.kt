@@ -60,12 +60,17 @@ open class EitherRoute(val route: Route) {
 
         handler(pipelineContext, Unit)
       }
-      
+
       when (result) {
         is Either.Right -> {}
         is Either.Left -> when (val value = result.value) {
-          is Respondable -> with(value) { 
-            call.respondToPipeline(null) 
+          is Respondable -> with(value) {
+            call.respondToPipeline(null)
+          }
+          is Throwable -> {
+            value.printStackTrace()
+            
+            call.respond(HttpStatusCode.InternalServerError, "Internal server error")
           }
           else -> call.respond(HttpStatusCode.InternalServerError, value)
         }
@@ -79,12 +84,18 @@ open class EitherRoute(val route: Route) {
   @JvmName("handleLeftTyped")
   inline fun <reified E : Any> handle(crossinline handler: EitherPipelineInterceptor<Unit, ApplicationCall, E>) {
     val defaultResponder: EitherResponder<E> = { value ->
-      respond(HttpStatusCode.InternalServerError, value)
+      if (value is Throwable) {
+        value.printStackTrace()
+        
+        respond(HttpStatusCode.InternalServerError, "Internal server error")
+      } else {
+        respond(HttpStatusCode.InternalServerError, value)
+      }
     }
 
     route.handle {
       val routing = route.application.feature(EitherRouting)
-      
+
       val pipelineContextOriginal = this
 
       val result = either<E, Unit> {
