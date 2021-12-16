@@ -1,8 +1,9 @@
-.gradle
+/.gradle/
 
 # Build output
-/out/
-/build/
+/**/bin/
+/**/out/
+/**/build/
 
 # IDE modules
 /*.iml

@@ -14,9 +14,12 @@
  *    limitations under the License.
  */
 
-rootProject.name = "kam"
-
-include("ktor-routing")
-include("ktor-auth")
-
-enableFeaturePreview("VERSION_CATALOGS")
+kotlin {
+  sourceSets {
+    val jvmMain by getting {
+      dependencies {
+        implementation(libs.ktor.server.core)
+      }
+    }
+  }
+}

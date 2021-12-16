@@ -14,13 +14,10 @@
  *    limitations under the License.
  */
 
-@file:Suppress("UNUSED_VARIABLE")
-
 plugins {
-  kotlin("multiplatform") version "1.6.0"
+  kotlin("multiplatform") version "1.6.10"
   id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
   id("io.gitlab.arturbosch.detekt") version "1.19.0"
-  `maven-publish`
 }
 
 group = "co.knoten"
@@ -30,33 +27,50 @@ repositories {
   mavenCentral()
 }
 
+subprojects {
+  apply(plugin = "org.jetbrains.kotlin.multiplatform")
+  apply(plugin = "maven-publish")
+
+  group = "co.knoten.kam"
+  version = "1.0-SNAPSHOT"
+
+  repositories {
+    mavenCentral()
+  }
+
+  kotlin {
+    jvm {
+      withJava()
+
+      compilations.all {
+        kotlinOptions.jvmTarget = "16"
+      }
+
+      testRuns["test"].executionTask.configure {
+        useJUnitPlatform()
+      }
+    }
+
+    sourceSets {
+      all {
+        languageSettings {
+          optIn("kotlin.RequiresOptIn")
+        }
+      }
+
+      val jvmMain by getting {
+        dependencies {
+          afterEvaluate {
+            implementation(libs.arrow.core)
+          }
+        }
+      }
+    }
+  }
+}
+
 kotlin {
-  jvm {
-    withJava()
-
-    compilations.all {
-      kotlinOptions.jvmTarget = "16"
-    }
-
-    testRuns["test"].executionTask.configure {
-      useJUnitPlatform()
-    }
-  }
-
-  sourceSets {
-    all {
-      languageSettings {
-        optIn("kotlin.RequiresOptIn")
-      }
-    }
-
-    val jvmMain by getting {
-      dependencies {
-        implementation(libs.arrow.core)
-        implementation(libs.ktor.server.core)
-      }
-    }
-  }
+  jvm()
 }
 
 detekt {

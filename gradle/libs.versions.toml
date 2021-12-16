@@ -2,6 +2,10 @@
 ktor="1.6.6"
 arrow="1.0.1"
 
+[libraries.ktor-auth-core]
+module="io.ktor:ktor-auth"
+version.ref="ktor"
+
 [libraries.ktor-server-core]
 module="io.ktor:ktor-server-core"
 version.ref="ktor"
