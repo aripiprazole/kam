@@ -14,12 +14,12 @@
  *    limitations under the License.
  */
 
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import java.lang.System.getenv
 
 plugins {
-  kotlin("multiplatform") version "1.6.10"
+  kotlin("multiplatform") version "1.6.10" apply false
   id("io.gitlab.arturbosch.detekt") version "1.19.0"
-  `maven-publish`
 }
 
 group = "co.knoten.kam"
@@ -29,11 +29,19 @@ repositories {
   mavenCentral()
 }
 
-allprojects {
+subprojects {
+  apply(plugin = "org.jetbrains.kotlin.multiplatform")
   apply(plugin = "maven-publish")
+
+  group = "co.knoten.kam"
+  version = rootProject.version
+
+  repositories {
+    mavenCentral()
+  }
   
   getenv("GITHUB_REPOSITORY")?.let { repository ->
-    publishing {
+    configure<PublishingExtension> {
       repositories {
         maven {
           name = "github"
@@ -46,19 +54,8 @@ allprojects {
       }
     }
   }
-}
 
-subprojects {
-  apply(plugin = "org.jetbrains.kotlin.multiplatform")
-
-  group = "co.knoten.kam"
-  version = rootProject.version
-
-  repositories {
-    mavenCentral()
-  }
-
-  kotlin {
+  configure<KotlinMultiplatformExtension> {
     jvm {
       withJava()
 
@@ -87,10 +84,6 @@ subprojects {
       }
     }
   }
-}
-
-kotlin {
-  jvm()
 }
 
 detekt {
