@@ -19,7 +19,9 @@ import java.lang.System.getenv
 
 plugins {
   kotlin("multiplatform") version "1.6.10" apply false
+  id("com.jfrog.artifactory") version "4.25.2"
   id("io.gitlab.arturbosch.detekt") version "1.19.0"
+  `maven-publish`
 }
 
 group = "co.knoten.kam"
@@ -29,8 +31,28 @@ repositories {
   mavenCentral()
 }
 
+artifactory {
+  setContextUrl("https://knotenco.jfrog.io/artifactory")
+
+  publish {
+    repository {
+      setRepoKey("default-gradle-dev-local")
+      setUsername(getenv("ARTIFACTORY_USERNAME").orEmpty())
+      setPassword(getenv("ARTIFACTORY_PASSWORD").orEmpty())
+      setMavenCompatible(true)
+    }
+
+    defaults {
+      setPublishArtifacts(true)
+      setPublishPom(true)
+      publications("jvm", "kotlinMultiplatform")
+    }
+  }
+}
+
 subprojects {
   apply(plugin = "org.jetbrains.kotlin.multiplatform")
+  apply(plugin = "com.jfrog.artifactory")
   apply(plugin = "maven-publish")
 
   group = "co.knoten.kam"
@@ -38,21 +60,6 @@ subprojects {
 
   repositories {
     mavenCentral()
-  }
-  
-  getenv("GITHUB_REPOSITORY")?.let { repository ->
-    configure<PublishingExtension> {
-      repositories {
-        maven {
-          name = "github"
-          url = uri("https://maven.pkg.github.com/$repository")
-          credentials {
-            username = getenv("GITHUB_USERNAME") ?: error("Unable to find GITHUB_USERNAME")
-            password = getenv("GITHUB_TOKEN") ?: error("Unable to find GITHUB_TOKEN")
-          }
-        }
-      }
-    }
   }
 
   configure<KotlinMultiplatformExtension> {
