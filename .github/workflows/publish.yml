@@ -1,0 +1,23 @@
+on:
+  release:
+    types: [created]
+
+jobs:
+  release:
+    name: Publish to github packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: 16
+          distribution: 'adopt'
+
+      - name: Publish
+        run: ./gradlew check publish --no-configure-on-demand --no-daemon
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ github.token }}

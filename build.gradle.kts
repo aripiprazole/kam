@@ -14,25 +14,45 @@
  *    limitations under the License.
  */
 
+import java.lang.System.getenv
+
 plugins {
   kotlin("multiplatform") version "1.6.10"
-  id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
   id("io.gitlab.arturbosch.detekt") version "1.19.0"
+  `maven-publish`
 }
 
-group = "co.knoten"
-version = "1.0-SNAPSHOT"
+group = "co.knoten.kam"
+version = getenv("GITHUB_REF")?.split("/")?.last() ?: "dev"
 
 repositories {
   mavenCentral()
 }
 
+allprojects {
+  apply(plugin = "maven-publish")
+  
+  getenv("GITHUB_REPOSITORY")?.let { repository ->
+    publishing {
+      repositories {
+        maven {
+          name = "github"
+          url = uri("https://maven.pkg.github.com/$repository")
+          credentials {
+            username = getenv("GITHUB_USERNAME") ?: error("Unable to find GITHUB_USERNAME")
+            password = getenv("GITHUB_TOKEN") ?: error("Unable to find GITHUB_TOKEN")
+          }
+        }
+      }
+    }
+  }
+}
+
 subprojects {
   apply(plugin = "org.jetbrains.kotlin.multiplatform")
-  apply(plugin = "maven-publish")
 
   group = "co.knoten.kam"
-  version = "1.0-SNAPSHOT"
+  version = rootProject.version
 
   repositories {
     mavenCentral()
