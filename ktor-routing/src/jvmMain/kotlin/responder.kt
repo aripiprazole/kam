@@ -1,5 +1,5 @@
 /*
- *    Copyright 2021 Knoten
+ *    Copyright 2022 Gabrielle Guimarães de Oliveira
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package co.knoten.kam
+package com.gabrielleeg1.kam
 
 import io.ktor.application.ApplicationCall
 import kotlin.reflect.KType

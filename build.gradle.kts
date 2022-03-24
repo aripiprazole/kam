@@ -1,5 +1,5 @@
 /*
- *    Copyright 2021 Knoten
+ *    Copyright 2022 Gabrielle Guimarães de Oliveira
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ plugins {
   `maven-publish`
 }
 
-group = "co.knoten.kam"
+group = "com.gabrielleeg1.kam"
 version = getenv("GITHUB_REF")?.split("/")?.last() ?: "dev"
 
 repositories {
@@ -55,7 +55,7 @@ subprojects {
   apply(plugin = "com.jfrog.artifactory")
   apply(plugin = "maven-publish")
 
-  group = "co.knoten.kam"
+  group = "com.gabrielleeg1.kam"
   version = rootProject.version
 
   repositories {

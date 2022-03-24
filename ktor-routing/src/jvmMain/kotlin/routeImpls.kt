@@ -1,5 +1,5 @@
 /*
- *    Copyright 2021 Knoten
+ *    Copyright 2022 Gabrielle Guimarães de Oliveira
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 @file:Suppress("unused", "TooManyFunctions")
 @file:OptIn(ExperimentalTypeInference::class)
 
-package co.knoten.kam
+package com.gabrielleeg1.kam
 
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -34,7 +34,7 @@ import io.ktor.routing.ParameterRouteSelector
 import io.ktor.routing.createRouteFromPath
 import io.ktor.util.pipeline.ContextDsl
 import kotlin.experimental.ExperimentalTypeInference
-import co.knoten.kam.EitherRoute as RouteE
+import com.gabrielleeg1.kam.EitherRoute as RouteE
 
 /**
  * Builds a route to match specified [path]
